@@ -85,11 +85,12 @@ class Button(Element):
 	
 	def update(self, key, mouse, events):
 		for event in events:
-			if event.type == MOUSEBUTTONDOWN and not self.pressed:
+			if event.type == MOUSEBUTTONDOWN:
 				if self.rect.collidepoint(mouse.get_pos()):
 					self.pressed = True
 					self.highlighted = True
 				else:
+					self.pressed = False
 					self.highlighted = False
 			if event.type == MOUSEBUTTONUP and self.pressed:
 				if self.rect.collidepoint(mouse.get_pos()):
