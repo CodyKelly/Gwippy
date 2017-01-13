@@ -1,8 +1,8 @@
 ################################################################################
-#                  This file is for testing elements of GUIPy                  #
+#                  This file is for testing elements of Gwippy                 #
 ################################################################################
 
-import pygame, guipy
+import pygame, gwippy
 from pygame.locals import *
 
 pygame.init()
@@ -10,11 +10,26 @@ pygame.init()
 DISPLAYSURF = pygame.display.set_mode((900, 600))
 pygame.display.set_caption('Hello World!')
 
-gui = guipy.GUI()
-button1 = guipy.Button(10, 10, 200, 200, name="Button 1", bordered=True)
-button2 = guipy.Button(300, 10, 200, 200, name="Button 2", bordered=True)
+gui = gwippy.GUI()
 
-gui.add_elements([button1, button2])
+buttons = []
+
+def button_function(but):
+	print "You've pressed a button located at " + str(but.rect.center) + "."
+	print "Its place in the elements list is " + str(gui.elements.index(but)) + "."
+
+# for y in range(0, 100):
+	# for x in range(0, 100):
+		# newButton = gwippy.Button(x * 22, y * 22, 20, 20)
+		# buttons.append(newButton)
+
+newButton = gwippy.Button(10, 10, 200, 200, bordered = True, function = button_function)
+buttons.append(newButton)
+
+newButton = gwippy.Button(250, 10, 200, 200, bordered = True, function = button_function)
+buttons.append(newButton)
+
+gui.add_elements(buttons)
 
 while True: # main game loop
 	events = pygame.event.get()

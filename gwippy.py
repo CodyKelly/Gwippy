@@ -1,5 +1,5 @@
 ################################################################################
-#                      GUIPi: A GUI Framework for Pygame                       #
+#                      Gwippy: A GUI Framework for Pygame                      #
 #                           Developed by Cody Kelly                            #
 #                     Use with Python 2.7 and Pygame 1.9.1                     #
 ################################################################################
@@ -39,6 +39,14 @@ class Element(object):
 		self.isActive = True
 		self.disabled = False
 
+class Border(object):
+	def __init__(self):
+		pass
+
+class ButtonStates:
+	# A glorified enum
+	Default, Pressed, Highlighted = range(1, 4)
+		
 class Button(Element):
 	'''
 		Button is an object which has a position,
@@ -69,8 +77,9 @@ class Button(Element):
 		self.surface = pygame.Surface((self.width, self.height))
 		
 		self.bordered = bordered
-		self.pressed = False
-		self.highlighted = False
+		self.borderWidth = 30
+		
+		self.state = ButtonStates.Default
 		
 		self.defaultColor = pygame.Color(150, 150, 150, 255)
 		self.defaultBorderColor = pygame.Color(170, 170, 170, 255)
@@ -81,52 +90,67 @@ class Button(Element):
 		self.pressedColor = pygame.Color(100, 100, 100, 255)
 		self.pressedBorderColor = pygame.Color(80, 80, 80, 255)
 		
-		self.borderWidth = 30
+		self.currentColor = self.defaultColor
+		self.currentBorderColor = self.defaultBorderColor
 	
 	def update(self, key, mouse, events):
-		for event in events:
-			if event.type == MOUSEBUTTONDOWN:
-				if self.rect.collidepoint(mouse.get_pos()):
-					self.pressed = True
-					self.highlighted = True
-				else:
-					self.pressed = False
-					self.highlighted = False
-			if event.type == MOUSEBUTTONUP and self.pressed:
-				if self.rect.collidepoint(mouse.get_pos()):
-					self.pressed = False
-					if self.function:
-						self.function(self)
-			if event.type == KEYDOWN and self.highlighted:
-				if event.key == K_RETURN:
-					self.pressed = True
-			if event.type == KEYUP and self.pressed and self.highlighted:
-				if event.key == K_RETURN:
-					self.pressed = False
-					if self.function:
-						self.function(self)
-		
-		if self.pressed and not self.rect.collidepoint(mouse.get_pos()) and not pygame.key.get_pressed()[K_RETURN]:
-			self.pressed = False
+	
+		mousePos = mouse.get_pos()
+	
+		if self.state == ButtonStates.Default:
+			self.change_to_color_scheme(ButtonStates.Default)
+			for event in events:
+				if event.type == MOUSEBUTTONDOWN:
+					if self.rect.collidepoint(mousePos):
+						self.state = ButtonStates.Pressed
+						
+		elif self.state == ButtonStates.Pressed:
+			self.change_to_color_scheme(ButtonStates.Pressed)
+			for event in events:
+				if event.type == MOUSEBUTTONUP:
+					if self.rect.collidepoint(mousePos):
+						self.execute_function()
+					self.state = ButtonStates.Highlighted
+				if event.type == KEYUP and event.key == K_RETURN:
+					self.execute_function()
+					self.state = ButtonStates.Highlighted
+				if event.type == MOUSEBUTTONDOWN and not self.rect.collidepoint(mousePos):
+					self.state = ButtonStates.Default
+			if not self.rect.collidepoint(mousePos) and not pygame.key.get_pressed()[K_RETURN]:
+				self.state = ButtonStates.Highlighted
+					
+		elif self.state == ButtonStates.Highlighted:
+			self.change_to_color_scheme(ButtonStates.Highlighted)
+			for event in events:
+				if event.type == MOUSEBUTTONDOWN:
+					if self.rect.collidepoint(mousePos):
+						self.state = ButtonStates.Pressed
+					else:
+						self.state = ButtonStates.Default
+				if event.type == KEYDOWN and event.key == K_RETURN:
+					self.state = ButtonStates.Pressed
 	
 	def draw(self, surface):
-		if self.defaultGraphic == None:
-			borderRect = pygame.Rect(-self.borderWidth / 2, -self.borderWidth / 2, self.width + self.borderWidth, self.height + self.borderWidth)
-			
-			if self.pressed :
-				self.surface.fill(self.pressedColor)
-				if self.bordered:
-					pygame.draw.rect(self.surface, self.pressedBorderColor, borderRect, self.borderWidth * 2)
-			else:
-				if self.highlighted:
-					self.surface.fill(self.highlightedColor)
-					if self.bordered:
-						pygame.draw.rect(self.surface, self.highlightedBorderColor, borderRect, self.borderWidth * 2)
-				else:
-					self.surface.fill(self.defaultColor)
-					if self.bordered:
-						pygame.draw.rect(self.surface, self.defaultBorderColor, borderRect, self.borderWidth * 2)
+		self.surface.fill(self.currentColor)
+		borderRect = pygame.Rect(-self.borderWidth / 2, -self.borderWidth / 2, self.width + self.borderWidth, self.height + self.borderWidth)
+		
+		if self.bordered:
+			pygame.draw.rect(self.surface, self.currentBorderColor, borderRect, self.borderWidth * 2)
 		
 		surface.blit(self.surface, self.rect)
+	
+	def execute_function(self):
+		if self.function:
+			self.function(self)
 			
+	def change_to_color_scheme(self, ButtonState):
+		if ButtonState == ButtonStates.Default:
+			self.currentColor = self.defaultColor
+			self.currentBorderColor = self.defaultBorderColor
+		elif ButtonState == ButtonStates.Pressed:
+			self.currentColor = self.pressedColor
+			self.currentBorderColor = self.pressedBorderColor
+		elif ButtonState == ButtonStates.Highlighted:
+			self.currentColor = self.highlightedColor
+			self.currentBorderColor = self.highlightedBorderColor
 		
